@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:pusher_channels/pusher_channels.dart';
 import 'package:flutter_pusher_local_notifications/api/notification_api.dart';
@@ -50,7 +52,11 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+
+  final pusher = Pusher(key: 'c2e71194e50d91c91f03', cluster: 'ap1');
+
+  bool isConnected = false;
+  bool isBinded = false;
 
   @override
   void initState() {
@@ -66,10 +72,51 @@ class _MyHomePageState extends State<MyHomePage> {
     /* DO SOMETHING WHEN YOU CLICK ON THE NOTIFICATION */
   }
   Future<void> initPusher() async { /* INITIALIZE PUSHER CONNECTION */
-    final pusher = Pusher(key: 'c2e71194e50d91c91f03', cluster: 'ap1');
-    await pusher.connect();
+    /* pusher = Pusher(key: 'c2e71194e50d91c91f03', cluster: 'ap1'); */
+    //pusher.connect().whenComplete(() => ).onError((error, stackTrace) => null).catchError(onError)
+    //await pusher.connect();
     /* LISTEN TO MESSAGES : START */
+    /* final messageChannel = pusher.subscribe('message');
+    messageChannel.bind('message', (dynamic data) {
+      var payload = data['message'];
+      var sender = payload['user']['first_name'] + ' ' + payload['user']['last_name'];
+      var message = payload['message'];
+      print(payload);
+      NotificationApi.showNotification(title: sender, body: message, payload: payload.toString());
+    }); */
+    /* LISTEN TO MESSAGES : END */
+  }
+  Future<void> _pusherConnect() async {
+    await pusher.connect().whenComplete(() {
+      print("connected");
+      setState(() {
+        isConnected = true;
+      });
+    }).onError((error, stackTrace) {
+      print(error);
+      setState(() {
+        isConnected = false;
+      });
+    }).catchError((onError) {
+      print(onError);
+      setState(() {
+        isConnected = false;
+      });
+    });
+  }
+  Future<void> _pusherDisconnect() async {
+    pusher.unbindGlobal();
+    pusher.disconnect();
+    print("disconnected");
+    setState(() {
+      isConnected = false;
+    });
+  }
+  Future<void> _connectToMessageLogs() async {
     final messageChannel = pusher.subscribe('message');
+    setState(() {
+      isBinded = true;
+    });
     messageChannel.bind('message', (dynamic data) {
       var payload = data['message'];
       var sender = payload['user']['first_name'] + ' ' + payload['user']['last_name'];
@@ -77,17 +124,11 @@ class _MyHomePageState extends State<MyHomePage> {
       print(payload);
       NotificationApi.showNotification(title: sender, body: message, payload: payload.toString());
     });
-    /* LISTEN TO MESSAGES : END */
   }
-  
-  void _incrementCounter() {
+  Future<void> _disconnectToMessageLogs() async {
+    pusher.unsubscribe('message');
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      isBinded = false;
     });
   }
 
@@ -106,40 +147,18 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
       ),
       body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
+            FlatButton(
+              onPressed: () => !isConnected ? _pusherConnect() : _pusherDisconnect(),
+              child: !isConnected ? const Text('Connect to Pusher') : const Text('Disconnect Pusher'),
+              color: !isConnected ? Colors.green : Colors.red
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
-            ),
+            isConnected == true ? FlatButton(onPressed: () => !isBinded ? _connectToMessageLogs() : _disconnectToMessageLogs(), child: !isBinded ? const Text('Connect to Project Logs') : const Text('Disconnect to Project Logs'), color: !isBinded ? Colors.blue : Colors.red) : const SizedBox.shrink()
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      )
     );
   }
 }
