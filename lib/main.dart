@@ -61,7 +61,6 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    initPusher();
     NotificationApi.init();
     listenNotifications();
   }
@@ -70,21 +69,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
   void onClickedNotification(String? payload) {
     /* DO SOMETHING WHEN YOU CLICK ON THE NOTIFICATION */
-  }
-  Future<void> initPusher() async { /* INITIALIZE PUSHER CONNECTION */
-    /* pusher = Pusher(key: 'c2e71194e50d91c91f03', cluster: 'ap1'); */
-    //pusher.connect().whenComplete(() => ).onError((error, stackTrace) => null).catchError(onError)
-    //await pusher.connect();
-    /* LISTEN TO MESSAGES : START */
-    /* final messageChannel = pusher.subscribe('message');
-    messageChannel.bind('message', (dynamic data) {
-      var payload = data['message'];
-      var sender = payload['user']['first_name'] + ' ' + payload['user']['last_name'];
-      var message = payload['message'];
-      print(payload);
-      NotificationApi.showNotification(title: sender, body: message, payload: payload.toString());
-    }); */
-    /* LISTEN TO MESSAGES : END */
   }
   Future<void> _pusherConnect() async {
     await pusher.connect().whenComplete(() {
