@@ -53,8 +53,8 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
 
-  final pusher = Pusher(key: 'c2e71194e50d91c91f03', cluster: 'ap1');
-
+  final pusher = Pusher(key: '74eaec05ee4100fc3e5d', cluster: 'ap1');
+  final int userId = 2;
   bool isConnected = false;
   bool isBinded = false;
 
@@ -97,11 +97,11 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
   Future<void> _connectToMessageLogs() async {
-    final messageChannel = pusher.subscribe('message');
+    final messageChannel = pusher.subscribe('message.$userId');
     setState(() {
       isBinded = true;
     });
-    messageChannel.bind('message', (dynamic data) {
+    messageChannel.bind('message.$userId', (dynamic data) {
       var payload = data['message'];
       var sender = payload['user']['first_name'] + ' ' + payload['user']['last_name'];
       var message = payload['message'];
